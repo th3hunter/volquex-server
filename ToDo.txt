@@ -1,0 +1,30 @@
+DB
+==
+(Ninguno)
+
+SERVER
+======
+- Parametrizar el costo base del flete.
+- Enviar correo al cliente con el resumen del viaje AL FINALIZAR.
+- Permitir subir imágenes de Usuarios.
+- Registrar y consultar bitácora del viaje.
+- Poner seguridad a los servicios para que los servicios de la WEB no sean accesados por clientes de la APP.
+
+WEB
+===
+- Permitir resetear filtros tipo COMBOBOX.
+- Permitir subir imágenes de Usuarios.
+- Mostrar bitácora del viaje.
+
+APP
+===
+- Cambiar el tema de la aplicación para usar fondo azul con imágenes de fondo y texto blanco.
+- Terminar el ciclo del CONDUCTOR.
+- Mostrar el costo base del flete.
+- Solicitar activar GPS.
+- Poner animaciones a los elementos de cada pantalla.
+- Corregir la descarga de la imagen de usuario y almacenamiento en caché en el RadSideMenu.
+- Que este mismo comportamiento funcione en la activity Datos de Usuario.
+- Permitir subir imágenes de Usuarios.
+- Permitir consultar bitácora del viaje.
+- Migrar los componentes a Material Design cuando salga de la beta.

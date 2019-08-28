@@ -1,0 +1,81 @@
+{
+  "format": 1,
+  "restore": {
+    "F:\\netcore\\Volquex\\Volquex.csproj": {}
+  },
+  "projects": {
+    "F:\\netcore\\Volquex\\Volquex.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "F:\\netcore\\Volquex\\Volquex.csproj",
+        "projectName": "Volquex",
+        "projectPath": "F:\\netcore\\Volquex\\Volquex.csproj",
+        "packagesPath": "C:\\Users\\laraujo\\.nuget\\packages\\",
+        "outputPath": "F:\\netcore\\Volquex\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\laraujo\\AppData\\Roaming\\NuGet\\NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.2"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.2": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.2": {
+          "dependencies": {
+            "Microsoft.AspNetCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.0, )",
+              "autoReferenced": true
+            },
+            "Microsoft.AspNetCore.Razor.Design": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.0, )"
+            },
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.0, )",
+              "autoReferenced": true
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[12.0.2, )"
+            },
+            "linq2db": {
+              "target": "Package",
+              "version": "[2.7.4, )"
+            },
+            "linq2db.PostgreSQL": {
+              "target": "Package",
+              "version": "[2.7.4, )"
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      }
+    }
+  }
+}

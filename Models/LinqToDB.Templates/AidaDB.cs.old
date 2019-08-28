@@ -1,0 +1,14 @@
+using LinqToDB;
+using LinqToDB.Data;
+using LinqToDB.Mapping;
+using aida.Models;
+
+namespace aida.Models
+{
+    public class AidaDB : DataConnection
+    {
+        public AidaDB() : base("Default") { }
+
+        public ITable<Usuarios> Usuarios => GetTable<Usuarios>();
+    }
+}
