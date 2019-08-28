@@ -1,1 +1,2 @@
-# volquex-server
+# Volquex Server
+.Net Core 2.2.203
