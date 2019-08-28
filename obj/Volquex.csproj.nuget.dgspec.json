@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "F:\\netcore\\Volquex\\Volquex.csproj": {}
+    "f:\\netcore\\Volquex\\Volquex.csproj": {}
   },
   "projects": {
-    "F:\\netcore\\Volquex\\Volquex.csproj": {
+    "f:\\netcore\\Volquex\\Volquex.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "F:\\netcore\\Volquex\\Volquex.csproj",
+        "projectUniqueName": "f:\\netcore\\Volquex\\Volquex.csproj",
         "projectName": "Volquex",
-        "projectPath": "F:\\netcore\\Volquex\\Volquex.csproj",
+        "projectPath": "f:\\netcore\\Volquex\\Volquex.csproj",
         "packagesPath": "C:\\Users\\laraujo\\.nuget\\packages\\",
-        "outputPath": "F:\\netcore\\Volquex\\obj\\",
+        "outputPath": "f:\\netcore\\Volquex\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
