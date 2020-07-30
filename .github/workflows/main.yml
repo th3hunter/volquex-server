@@ -23,15 +23,14 @@ jobs:
     - uses: actions/checkout@v2
 
     # Runs a single command using the runners shell
-    - name: Build and deploy the Docker image
-      env: 
-        HEROKU_API_KEY: ${{ secrets.HEROKU_API_KEY }}
-        APP_NAME: ${{ 'volquex' }}
-      run: |
-        dotnet publish -c Release
-        docker login --username=_ --password=$HEROKU_API_KEY registry.heroku.com
-        # heroku container:push web -a $APP_NAME        
-        docker build -t $APP_NAME ./bin/release/netcoreapp2.2/publish
-        docker tag $APP_NAME registry.heroku.com/$APP_NAME/web
-        docker push registry.heroku.com/$APP_NAME/web
-        heroku container:release web -a $APP_NAME
+    - name: Deploy Docker Image to Heroku App
+      uses: jctaveras/heroku-deploy@v2.0.0
+      with:
+        # Email Linked to your Heroku Account
+        email: th3hunter@hotmail.com
+        # Your Heroku API Key
+        api_key: ${{ secrets.HEROKU_API_KEY }}
+        # Your Heroku App Name
+        app_name: volquex
+        # Dokerfile path
+        dockerfile_path: /home/runner/work/volquex-server/volquex-server/
