@@ -2,84 +2,92 @@ using System;
 using System.Linq;
 using LinqToDB;
 using Volquex.Models;
+using Volquex.Utils;
 
 namespace Volquex.Services
 {
     public class Sesiones
     {
-        public Sesiones () {}
+        public Sesiones(VolquexDB db) 
+        {
+            this.db = db;
+        }
+        
+        private VolquexDB db;
+
+        // Obtiene el registro de la sesión y del usuario asociado
+        public Models.Sesiones Mostrar()
+        {
+			var q = from p in db.Sesiones
+				where p.SesionId == Startup.TokenSesion
+				select new Models.Sesiones
+				{
+					SesionId = p.SesionId,
+					SesionExpira = p.SesionExpira,
+					UsuarioId = p.UsuarioId,
+					SesionTipo = p.SesionTipo,
+					fkusuarios1 = p.fkusuarios1
+				};
+
+			return(q.FirstOrDefault());
+        }
 
         public Models.Sesiones Insertar(Models.Sesiones o)
         {
-            using(var db = new VolquexDB())
-            {
-                db.Insert(o);
-            }
-
+			db.InsertOrReplace(o);
             return o;
         }
 
 		// Elimina las sesiones expiradas
 		public void EliminarExpiradas()
 		{
-			using (var db = new VolquexDB())
-			{
-				db.Sesiones
-					.Where(p => p.SesionExpira < Sql.CurrentTimestamp)
-					.Delete();
-			}
+			db.Sesiones
+				.Where(p => p.SesionExpira < Sql.CurrentTimestamp)
+				.Delete();
 		}
 
 		// Verifica si el token es válido
-		public string Autorizar(string Token)
+		public RespuestaSimple Autorizar(string Token)
 		{
-			using (var db = new VolquexDB())
-			{
-				var q = from p in db.Sesiones
-					where p.SesionId == Token
-					select p;
+			var q = from p in db.Sesiones
+				where p.SesionId == Token
+				select new Models.Sesiones
+                {
+                    SesionTipo = p.SesionTipo,
+                    SesionExpira = p.SesionExpira,
+                    fkusuarios1 = p.fkusuarios1
+                };
 
-				var r = q.FirstOrDefault();
+			var r = q.FirstOrDefault();
 
-				// Si no existe la sesión
-				if (r == null)
-					return "No ha iniciado sesión.";
-				
-				// Si el token existe pero está expirado
-				if(r.SesionExpira < DateTime.Now)
-					return "Su sesión expiró.";
-				
-				// Si todo está OK, aumento la expiración de la sesión a 30 min.
-                // pero sólo si es del tipo LOCAL
-                if (r.SesionTipo == "local")
-                    db.Sesiones
-                        .Where(p => p.SesionId == Token)
-                        .Set(p => p.SesionExpira, p => System.DateTime.Now.AddMinutes(30))
-                        .Update();
+			// Si no existe la sesión
+			if (r == null)
+				return new RespuestaSimple(500, "No ha iniciado sesión.");
+			
+			// Si el token existe pero está expirado
+			if(r.SesionExpira < DateTime.Now)
+				return new RespuestaSimple(500, "Su sesión expiró.");
+			
+			// Si todo está OK, aumento la expiración de la sesión a 30 min.
+			// pero sólo si es del tipo LOCAL
+			if (r.SesionTipo == "local")
+				db.Sesiones
+					.Where(p => p.SesionId == Token)
+					.Set(p => p.SesionExpira, p => System.DateTime.Now.AddMinutes(30))
+					.Update();
 
-                // Retorno vacío para indicar que está OK
-				return "";
-			}
+			// Si la sesión no es local, aumento a 30 días
+			if (r.SesionTipo != "local")
+				db.Sesiones
+					.Where(p => p.SesionId == Token)
+					.Set(p => p.SesionExpira, p => System.DateTime.Now.AddDays(30))
+					.Update();
+
+			// Retorno vacío para indicar que está OK
+			return new RespuestaSimple(new 
+            {
+                Usuario = r.fkusuarios1
+            });
 		}
-		
-        // Obtiene el usuario de la tabla Sesiones
-		public decimal ObtenerUsuario()
-		{	
-			// Lee la sesión y obtiene el usuario asociado
-			using (var db = new VolquexDB())
-			{
-				var q = from p in db.Sesiones
-					where p.SesionId == Startup.Token
-					select p;
-
-				return(q.FirstOrDefault().UsuarioId);
-			}
-		}
-
-        // Obtiene el Token del header en el request
-        public string ObtenerToken() {
-            Startup.Request.Headers.TryGetValue("Authorization", out var token);
-            return token;
-        }
 	}
 }

@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="es">
+	<head>
+		<meta charset="utf-8">
+		<title>Volquex</title>
+		
+		<meta name="google-signin-client_id" content="627840633259-7st5rbs262te26at3d0jdfc0s98amehl.apps.googleusercontent.com">
+		
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="icon" type="image/x-icon" href="../assets/logo.png">
+		<link rel="stylesheet" href="../assets/styles.css"></head>
+		
+		<script src="https://apis.google.com/js/platform.js?hl=es" async defer></script>
+		<script src="nativescript-webview-interface.js"></script>
+		
+		<script>
+			function facebookLogin() {
+				FB.getLoginStatus(function(response) {
+					console.log(response);
+					
+					// Emite la respuesta a la app
+					nsWebViewInterface.emit('facebookLogin', response);
+				});
+			}
+			
+			function googleLogin(googleUser) {
+				console.log(googleUser);
+					
+				// Emite la respuesta a la app
+				nsWebViewInterface.emit('googleLogin', googleUser);
+			}
+		</script>
+		
+		<style>
+			html, body {
+				height: 100%;
+			}
+			body {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+			}
+			body > * {
+				margin: 10px;
+			}
+			span[id^=not_signed_], span[id^=connected] {
+				font-size: 15px;
+			}
+			span[id^=not_signed_]:before {
+				content: 'Entrar con Google';
+				padding-right: 80px;
+			}
+			span[id^=connected]:before {
+				content: 'Continuar con Google';
+				padding-right: 80px;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="fb-root"></div>
+		<script async defer crossorigin="anonymous" src="https://connect.facebook.net/es_LA/sdk.js#xfbml=1&version=v5.0&appId=476901979548760&autoLogAppEvents=1"></script>
+		
+		<h1>¡Bienvenido!</h1>
+		<span>Elige cómo quieres identificarte</span>
+		
+		<div class="fb-login-button" data-width="250" data-size="large" data-button-type="continue_with" data-auto-logout-link="false" data-use-continue-as="false"></div>
+		
+		<div class="g-signin2" data-onsuccess="googleLogin" data-width="250" data-longtitle="false" data-theme="dark"></div>
+		
+	</body>
+	
+</html>

@@ -1,0 +1,51 @@
+@import '~@angular/material/theming';
+// Plus imports for other components in your app.
+
+// Include the common styles for Angular Material. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+// Be sure that you only ever include this mixin once!
+@include mat-core();
+
+
+/* ******************************************** */
+/*            DEFAULT THEME                     */
+/* ******************************************** */
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue. Available color palettes: https://material.io/design/color/
+$default-primary: mat-palette($mat-blue, 700, 300, 900);
+$default-accent:  mat-palette($mat-amber, 600, 200, 900);
+
+// The warn palette is optional (defaults to red).
+$default-warn:    mat-palette($mat-red);
+
+// Create the theme object (a Sass map containing all of the palettes).
+$default-theme: mat-light-theme($default-primary, $default-accent, $default-warn);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($default-theme);
+
+/* ******************************************** */
+/*              DARK THEME                      */
+/* ******************************************** */
+// Create the theme object (a Sass map containing all of the palettes).
+$dark-theme: mat-dark-theme($default-primary, $default-accent, $default-warn);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+.dark-theme {
+    @include angular-material-theme($dark-theme);
+
+    .mat-form-field-outline {
+        background-color: transparent;
+    }
+    .app-grid table tbody tr:hover {
+        background-color: #333;
+    }
+    .app-grid-row-selected, .app-grid-row-selected:hover {
+        background-color: mat-color($mat-blue, 800) !important;
+    }
+}

@@ -1,0 +1,19 @@
+@font-face {
+	font-family: 'Roboto';
+	font-style: normal;
+	font-weight: 400;
+	src: url('fonts/roboto-v20-latin-regular.woff2'); /* For IE6-8 */
+	src: local('Roboto'), local('Roboto-Regular'), url('fonts/roboto-v20-latin-regular.woff2') format('woff2');
+}
+body {
+    background: url('bg.jpg') no-repeat top center/cover;
+    color: #fff;
+    font-family: Roboto;
+    text-align: justify;
+    width: 75%;
+    margin: 0 auto;
+}
+.logo {
+    margin: 0 auto;
+    display: block;
+}

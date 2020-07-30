@@ -1,16 +1,17 @@
-using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.Extensions.Http;
-using System.Net.Http;
 using Volquex.Utils;
+using Volquex.Models;
 
 namespace Volquex.Controllers
 {
     [Route("api/[controller]")]
     public class Usuarios : Controller
     {
+        public Usuarios() {}
+        
+        private VolquexDB db;
 
         // GET api/Usuarios
         [HttpGet("")]
@@ -23,35 +24,55 @@ namespace Volquex.Controllers
             [FromQuery] int numRegistros
             )
         {
-            return new Services.Usuarios().Listar(
-                usuarioId,
-                usuNom,
-                usuTipo,
-                usuEst,
-                numPagina,
-                numRegistros
-            );
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).Listar(
+                    usuarioId,
+                    usuNom,
+                    usuTipo,
+                    usuEst,
+                    numPagina,
+                    numRegistros
+                );
         }
 
         // GET api/Usuarios/5
         [HttpGet("{id}")]
         public ActionResult<Models.Usuarios> GetById(decimal id)
         {
-            return new Services.Usuarios().Mostrar(id);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).Mostrar(id);
         }
 
         // POST api/Usuarios
         [HttpPost("")]
         public ActionResult<Models.Usuarios> Post([FromBody] Models.Usuarios o)
         { 
-            return new Services.Usuarios().Insertar(o);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).Insertar(o);
         }
 
         // PUT api/Usuarios
         [HttpPut("")]
         public ActionResult<Models.Usuarios> Put([FromBody] Models.Usuarios o) 
         { 
-            return new Services.Usuarios().Actualizar(o);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).Actualizar(o);
         }
 
         // POST api/Usuarios/login
@@ -62,7 +83,8 @@ namespace Volquex.Controllers
             string usuario = credenciales.usuario;
             string password = credenciales.password;
             
-            return new Services.Usuarios().Login(usuario, password);
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).Login(usuario, password);
         }
 
         // POST api/Usuarios/registrar
@@ -72,15 +94,17 @@ namespace Volquex.Controllers
         {
             string token = data.token;
             string type = data.type;
+            string tokenDispositivo = data.tokenDispositivo;
             
-            return new Services.Usuarios().Registrar(token, type);
+            return new Services.Usuarios(db).Registrar(token, tokenDispositivo, type);
         }
 
         // GET api/usuarios/mis-datos
         [HttpGet("mis-datos")]
         public ActionResult<Models.Usuarios> MisDatos()
         {
-            return new Services.Usuarios().MisDatos();
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).MisDatos();
         }
 
         // POST api/Usuarios/actualizar-datos
@@ -91,7 +115,17 @@ namespace Volquex.Controllers
             string usuEmail = data.usuEmail;
             string usuCel = data.usuCel;
 
-            return new Services.Usuarios().ActualizarDatos(usuNom, usuEmail, usuCel);
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).ActualizarDatos(usuNom, usuEmail, usuCel);
+        }
+
+        // POST api/Usuarios/inicializar/alsdkjf2093845okjldfkjñad
+        [AllowAnonymous]
+        [HttpGet("inicializar/{dispositivoId}")]
+        public ActionResult<RespuestaSimple> Inicializar(string dispositivoId)
+        {
+            using (db = new VolquexDB())
+                return new Services.Usuarios(db).Inicializar(dispositivoId);
         }
     }
 }

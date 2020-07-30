@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Volquex.Utils;
+using Volquex.Models;
 
 namespace Volquex.Controllers
 {
@@ -7,6 +8,8 @@ namespace Volquex.Controllers
     public class Volquetas : Controller
     {
         public Volquetas() { }
+        
+        private VolquexDB db;
 
         // GET api/Volquetas
         [HttpGet("")]
@@ -19,42 +22,67 @@ namespace Volquex.Controllers
             [FromQuery] int numRegistros
             )
         {
-            return new Services.Volquetas().Listar(
-                volquetaId,
-                volqDsc,
-                conducNom,
-                volqEst,
-                numPagina,
-                numRegistros
-            );
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Volquetas(db).Listar(
+                    volquetaId,
+                    volqDsc,
+                    conducNom,
+                    volqEst,
+                    numPagina,
+                    numRegistros
+                );
         }
 
         // GET api/Volquetas/5
         [HttpGet("{id}")]
         public ActionResult<Models.Volquetas> GetById(decimal id)
         {
-            return new Services.Volquetas().Mostrar(id);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Volquetas(db).Mostrar(id);
         }
 
         // POST api/Volquetas
         [HttpPost("")]
         public ActionResult<Models.Volquetas> Post([FromBody] Models.Volquetas o)
         { 
-            return new Services.Volquetas().Insertar(o);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Volquetas(db).Insertar(o);
         }
 
         // PUT api/Volquetas
         [HttpPut("")]
         public ActionResult<Models.Volquetas> Put([FromBody] Models.Volquetas o) 
         { 
-            return new Services.Volquetas().Actualizar(o);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Volquetas(db).Actualizar(o);
         }
         
         // GET api/Volquetas/ActualizarPosicion
         [HttpGet("ActualizarPosicion/{id}/{lat}/{lon}")]
-        public RespuestaSimple ActualizarPosicion(decimal id, string lat, string lon)
+        public ActionResult<RespuestaSimple> ActualizarPosicion(decimal id, string lat, string lon)
         { 
-            return new Services.Volquetas().ActualizarPosicion(id, lat, lon);
+            // Valida que el usuario sea administrador
+            if (Startup.Usuario.UsuTipo != "ADM")
+                return Unauthorized();
+                
+            using (db = new VolquexDB())
+                return new Services.Volquetas(db).ActualizarPosicion(id, lat, lon);
         }
     }
 }

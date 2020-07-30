@@ -19,22 +19,29 @@ namespace Volquex.Utils
             // Obtiene la clave de la variable estática
             string Password = Startup.Key;
 
-            byte[] initVectorBytes = Encoding.UTF8.GetBytes(initVector);
-            byte[] plainTextBytes = Encoding.UTF8.GetBytes(Texto);
-            PasswordDeriveBytes password = new PasswordDeriveBytes(Password, null);
-            byte[] keyBytes = password.GetBytes(keysize / 8);
-            RijndaelManaged symmetricKey = new RijndaelManaged();
-            symmetricKey.Mode = CipherMode.CBC;
-            ICryptoTransform encryptor = symmetricKey.CreateEncryptor(keyBytes, initVectorBytes);
-            MemoryStream memoryStream = new MemoryStream();
-            CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
-            cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
-            cryptoStream.FlushFinalBlock();
-            byte[] cipherTextBytes = memoryStream.ToArray();
-            memoryStream.Close();
-            cryptoStream.Close();
-            
-            return Convert.ToBase64String(cipherTextBytes);
+            try {
+                byte[] initVectorBytes = Encoding.UTF8.GetBytes(initVector);
+                byte[] plainTextBytes = Encoding.UTF8.GetBytes(Texto);
+                PasswordDeriveBytes password = new PasswordDeriveBytes(Password, null);
+                byte[] keyBytes = password.GetBytes(keysize / 8);
+                RijndaelManaged symmetricKey = new RijndaelManaged();
+                symmetricKey.Mode = CipherMode.CBC;
+                ICryptoTransform encryptor = symmetricKey.CreateEncryptor(keyBytes, initVectorBytes);
+                MemoryStream memoryStream = new MemoryStream();
+                CryptoStream cryptoStream = new CryptoStream(memoryStream, encryptor, CryptoStreamMode.Write);
+                cryptoStream.Write(plainTextBytes, 0, plainTextBytes.Length);
+                cryptoStream.FlushFinalBlock();
+                byte[] cipherTextBytes = memoryStream.ToArray();
+                memoryStream.Close();
+                cryptoStream.Close();
+                
+                return Convert.ToBase64String(cipherTextBytes);
+            }
+            catch (System.Exception)
+            {
+                // Si hubo algún error, devuelvo un string vacío
+                return "";
+            }
         }
 
         //Decrypt

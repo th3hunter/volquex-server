@@ -1,0 +1,8 @@
+bin/
+node_modules/
+obj/
+.server/
+.vscode/
+*.bat
+*.sh
+*.tt

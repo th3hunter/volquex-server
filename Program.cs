@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace Volquex
 {
@@ -8,7 +7,7 @@ namespace Volquex
     {
         public static void Main(string[] args)
         {
-            CreateWebHostBuilder(args).UseUrls(urls: "http://*:5000").Build().Run();
+            CreateWebHostBuilder(args).Build().Run();
         }
 
         public static IWebHostBuilder CreateWebHostBuilder(string[] args) =>

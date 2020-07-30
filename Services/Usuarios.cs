@@ -6,14 +6,19 @@ using Microsoft.AspNetCore.Mvc;
 using LinqToDB;
 using Newtonsoft.Json;
 using Volquex.Models;
+using Volquex.Models.Firebase;
 using Volquex.Utils;
 	
 namespace Volquex.Services
 {
     public class Usuarios
     {
-
-        public Usuarios() {}
+        public Usuarios(VolquexDB db) 
+        {
+            this.db = db;
+        }
+        
+        private VolquexDB db;
 
         public DataProvider<Models.Usuarios> Listar(
             decimal usuarioId, 
@@ -24,190 +29,238 @@ namespace Volquex.Services
             int numRegistros
             ) 
         {
-            using (var db = new VolquexDB())
-            {
-                var q = from p in db.Usuarios
-                    orderby p.UsuNom
-                    select new Models.Usuarios
-                    {
-                        UsuarioId = p.UsuarioId,
-                        UsuNom = p.UsuNom,
-                        UsuEmail = p.UsuEmail,
-                        UsuCel = p.UsuCel,
-                        UsuTipo = p.UsuTipo,
-                        UsuFoto = p.UsuFoto,
-                        UsuTipoFoto = p.UsuTipoFoto,
-                        UsuEst = p.UsuEst
-                    };
+            var q = from p in db.Usuarios
+                orderby p.UsuNom
+                select new Models.Usuarios
+                {
+                    UsuarioId = p.UsuarioId,
+                    UsuNom = p.UsuNom,
+                    UsuEmail = p.UsuEmail,
+                    UsuCel = p.UsuCel,
+                    UsuTipo = p.UsuTipo,
+                    UsuFoto = p.UsuFoto,
+                    UsuTipoFoto = p.UsuTipoFoto,
+                    UsuEst = p.UsuEst
+                };
 
-                // Aplica los filtros
-                if (usuarioId > 0) 
-                    q = q.Where(p => p.UsuarioId == usuarioId);
-                if (usuNom != null) 
-                    q = q.Where(p => p.UsuNom.Contains(usuNom));
-                if (usuTipo != null) 
-                    q = q.Where(p => p.UsuTipo == usuTipo);
-                if (usuEst != null) 
-                    q = q.Where(p => p.UsuEst == usuEst);
+            // Aplica los filtros
+            if (usuarioId > 0) 
+                q = q.Where(p => p.UsuarioId == usuarioId);
+            if (usuNom != null) 
+                q = q.Where(p => p.UsuNom.Contains(usuNom));
+            if (usuTipo != null) 
+                q = q.Where(p => p.UsuTipo == usuTipo);
+            if (usuEst != null) 
+                q = q.Where(p => p.UsuEst == usuEst);
 
-                // Obtiene el total de registros antes de aplicar el paginado
-                var count = q.Count();
+            // Obtiene el total de registros antes de aplicar el paginado
+            var count = q.Count();
 
-                // Aplica el paginado
-                q = Query<Models.Usuarios>.Paginar(q, numPagina, numRegistros);
+            // Aplica el paginado
+            q = Query<Models.Usuarios>.Paginar(q, numPagina, numRegistros);
 
-                // Retorna el DTO (Data Transfer Object)
-                return new DataProvider<Models.Usuarios>(count, q.ToList()) ;
-            }
+            // Retorna el DTO (Data Transfer Object)
+            return new DataProvider<Models.Usuarios>(count, q.ToList()) ;
         }
 
         public Models.Usuarios Mostrar(decimal id)
         {
-            using (var db = new VolquexDB())
-            {
-                var q = from p in db.Usuarios
-                    where p.UsuarioId == id
-                    select p;
+            var q = from p in db.Usuarios
+                where p.UsuarioId == id
+                select p;
 
-                return q.FirstOrDefault();
-            }
+            return q.FirstOrDefault();
         }
 
         public Models.Usuarios Insertar(Models.Usuarios o)
         {
-            using(var db = new VolquexDB())
-            {
-                // Obtengo el siguiente Id a insertar
-                o.UsuarioId = Numeracion();
-                db.Insert(o);
-            }
+            // Obtengo el siguiente Id a insertar
+            o.UsuarioId = Numeracion();
+            db.Insert(o);
 
             return(o);
         }
 
         public Models.Usuarios Actualizar(Models.Usuarios o)
         {
-            using (var db = new VolquexDB())
-            {
-                db.Update(o);
-            }
+            // Si viene el usuario, encripto la contraseña
+            if (o.UsuPassword != "" && o.UsuPassword != null) 
+                o.UsuPassword = Utils.Encriptacion.Encriptar(o.UsuPassword);
 
+            db.Update(o);
             return(o);
         }
 
         public decimal Numeracion() {
-            using (var db = new VolquexDB())
-            {
-                // Obtengo el último registro
-                var q = from p in db.Usuarios
-                    orderby p.UsuarioId descending
-                    select new Models.Usuarios
-                    {
-                        UsuarioId = p.UsuarioId
-                    };
+            // Obtengo el último registro
+            var q = from p in db.Usuarios
+                orderby p.UsuarioId descending
+                select new Models.Usuarios
+                {
+                    UsuarioId = p.UsuarioId
+                };
 
-                // Retorno el último ID + 1
-                return q.FirstOrDefault() != null ? q.FirstOrDefault().UsuarioId + 1 : 1;
-            }
+            // Retorno el último ID + 1
+            return q.FirstOrDefault() != null ? q.FirstOrDefault().UsuarioId + 1 : 1;
         }
 
         public RespuestaSimple Login(string usuario, string password)
         {
-            using (var db = new VolquexDB())
-            {
-                // Ubico el usuario
-                var q = from p in db.Usuarios
-                    where p.UsuEmail == usuario
-                    orderby p.UsuEmail
-                    select new Models.Usuarios
-                    {
-                        UsuarioId = p.UsuarioId,
-                        UsuEmail = p.UsuEmail,
-                        UsuNom = p.UsuNom,
-                        UsuPassword = p.UsuPassword
-                    };
-                
-                // Obtiene el primer registro
-                var r = q.FirstOrDefault();
+            // Ubico el usuario
+            var q = from p in db.Usuarios
+                where p.UsuEmail == usuario
+                orderby p.UsuEmail
+                select new Models.Usuarios
+                {
+                    UsuarioId = p.UsuarioId,
+                    UsuEmail = p.UsuEmail,
+                    UsuNom = p.UsuNom,
+                    UsuPassword = p.UsuPassword,
+                    UsuTipo = p.UsuTipo
+                };
+            
+            // Obtiene el primer registro
+            var r = q.FirstOrDefault();
 
-                // Si no encontró, retorno
-                if (r == null) return new RespuestaSimple(401, "Usuario y/o contraseña incorrectos.");
+            // Si no encontró, retorno
+            if (r == null) return new RespuestaSimple(401, "Usuario y/o contraseña incorrectos.");
 
-                Debug.Consola("UsuPassword", r.UsuPassword);
-                Debug.Consola("password", password);
-                Debug.Consola("UsuEmail", r.UsuEmail);
+            // Si el usuario no es administrador, también retorno
+            if (r.UsuTipo != "ADM") return new RespuestaSimple(401, "Usuario no autorizado.");
 
-                // Desencripto la contraseña usando la clave
-                // Si no coinciden, retorno
-                // También permito entrar si la contraseña es igual al usuario (inicialmente)
-                if (Encriptacion.Desencriptar(r.UsuPassword) != password &&
-                    (r.UsuPassword != r.UsuEmail || r.UsuPassword != password))
-                    return new RespuestaSimple(401, "Usuario y/o contraseña incorrectos.");
+            // Desencripto la contraseña usando la clave
+            // Si no coinciden, retorno
+            // También permito entrar si la contraseña es igual al usuario (inicialmente)
+            if (Encriptacion.Desencriptar(r.UsuPassword) != password &&
+                (r.UsuPassword != r.UsuEmail || r.UsuPassword != password))
+                return new RespuestaSimple(401, "Usuario y/o contraseña incorrectos.");
 
-                // Usuario correcto. Creo un token JWT y lo devuelvo
-                var token = Encriptacion.Encriptar(Guid.NewGuid().ToString());
+            // Usuario correcto. Creo un token JWT y lo devuelvo
+            var token = Encriptacion.Encriptar(Guid.NewGuid().ToString());
 
-                // Elimina las sesiones expiradas
-                new Services.Sesiones().EliminarExpiradas();
+            // Elimina las sesiones expiradas
+            new Services.Sesiones(db).EliminarExpiradas();
 
-                // Creo la sesión en la tabla y almaceno el token
-                new Services.Sesiones().Insertar( new Models.Sesiones {
-                    SesionId = token,
-                    SesionExpira = DateTime.Now.AddHours(1),
-                    UsuarioId = r.UsuarioId,
-                    SesionTipo = "local"
-                });
+            // Creo la sesión en la tabla y almaceno el token
+            new Services.Sesiones(db).Insertar( new Models.Sesiones {
+                SesionId = token,
+                SesionExpira = DateTime.Now.AddHours(1),
+                UsuarioId = r.UsuarioId,
+                SesionTipo = "local"
+            });
 
-                // Retorno OK y el Token
-                return new RespuestaSimple(200, token);
-            }
+            // Retorno OK y el Token
+            return new RespuestaSimple(200, token);
         }
 
-        public async Task<ActionResult<RespuestaSimple>> Registrar(string token, string type)
+        public async Task<ActionResult<RespuestaSimple>> Registrar(
+			string token, 
+			string tokenDispositivo, 
+			string type)
         {
             var res = new RespuestaSimple();
             string id = "", name = "", email = "", photo = "";
 
             // Inicializo los objetos para hacer el Request
             var client = new HttpClient();
-            var request = new HttpRequestMessage();
-            request.Method = HttpMethod.Get;
+            HttpResponseMessage response = null;
 
-            // Para FACEBOOK
-            if (type == "facebook")
-                // Envío el token en el query string
-                request.RequestUri = new Uri("https://graph.facebook.com/me?fields=id,name,email&access_token=" + token);
-            else
+            // Si es interfaz WEB
+            if (type.IndexOf("web") > 0)
             {
-                // Para GOOGLE
-                // Envío el token en el Header (OAUTH 2.0)
-                request.RequestUri = new Uri("https://www.googleapis.com/oauth2/v3/userinfo");
-                request.Headers.Add("Authorization", "Bearer " + token);
-            }
+                var request = new HttpRequestMessage();
+                request.Method = HttpMethod.Get;
 
-            // Envía el Request al proveedor respectivo
-            var response = await client.SendAsync(request);
+                // Para FACEBOOK web
+                if (type == "facebook-web")
+                    // Envío el token en el query string
+                    request.RequestUri = new Uri("https://graph.facebook.com/me?fields=id,name,email&access_token=" + token);
+                
+                // Para GOOGLE web
+                if (type == "google-web")
+                {
+                    // Envío el token en el Header (OAUTH 2.0)
+                    request.RequestUri = new Uri("https://www.googleapis.com/oauth2/v3/userinfo");
+                    request.Headers.Add("Authorization", "Bearer " + token);
+                }
+
+                // Envía el Request al proveedor respectivo
+                response = await client.SendAsync(request);
+            }
+			
+			// Google con Firebase
+            if (type == "google")
+            {
+                // Envía el Request al proveedor respectivo
+                response = await client.PostAsJsonAsync(
+                    "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + Startup.Firebase.WebAPIKey,
+                    new { idToken = token }
+                );
+            }
+			
+			// Google API (OAuth2)
+            if (type == "google-oauth2")
+            {
+                var request = new HttpRequestMessage();
+                request.Method = HttpMethod.Get;
+				request.RequestUri = new Uri("https://oauth2.googleapis.com/tokeninfo?id_token=" + token);
+
+                // Envía el Request al proveedor respectivo
+                response = await client.SendAsync(request);
+            }
 
             // Si el token es válido
             if (response.IsSuccessStatusCode)
             {
-                // Obtengo los datos del usuario
-                dynamic data = JsonConvert.DeserializeObject( 
-                    response.Content.ReadAsStringAsync().Result
-                );
+                // Si es interfaz WEB
+                if (type.IndexOf("web") > 0)
+                {
+                    // Obtengo los datos del usuario
+                    dynamic data = JsonConvert.DeserializeObject( 
+                        response.Content.ReadAsStringAsync().Result
+                    );
 
-                id = data.id;
-                name = data.name;
-                email = data.email;
+                    id = data.id;
+                    name = data.name;
+                    email = data.email;
 
-                // Si es FACEBOOK
-                if (type == "facebook")
-                    // Armo la URL para obtener la foto
-                    photo = "https://graph.facebook.com/" + id + "/picture?type=large";
-                else
-                    // Si es GOOGLE
-                    // La foto viene en el JSON directamente
-                    photo = data.picture;
+                    // Si es FACEBOOK web
+                    if (type == "facebook-web")
+                        // Armo la URL para obtener la foto
+                        photo = "https://graph.facebook.com/" + id + "/picture?type=large";
+                    else
+                        // Si es GOOGLE
+                        // La foto viene en el JSON directamente
+                        photo = data.picture;
+                }
+				
+				// Google con Firebase
+				if (type == "google")
+                {
+                    // Obtengo los datos del usuario FIREBASE
+                    AuthResponse data = JsonConvert.DeserializeObject<AuthResponse>( 
+                        response.Content.ReadAsStringAsync().Result
+                    );
+
+                    id = data.users[0].localId;
+                    name = data.users[0].displayName;
+                    email = data.users[0].email;
+                    photo = data.users[0].photoUrl;
+                }
+			
+				// Google API (OAuth2)
+				if (type == "google-oauth2")
+				{
+                    // Obtengo los datos del usuario
+                    dynamic data = JsonConvert.DeserializeObject( 
+                        response.Content.ReadAsStringAsync().Result
+                    );
+
+                    name = data.name;
+                    email = data.email;
+					photo = data.picture;
+				}
+
             }
             else
             {
@@ -219,19 +272,20 @@ namespace Volquex.Services
             // Si se pudo iniciar sesión
             if (res.Codigo == 200)
             {
-                // Verifico si el usuario ya existe por el email
-                using (var db = new VolquexDB())
+                // Aquí abro otra conexión a la base de datos por el ASYNC
+                using(db = new VolquexDB())
                 {
+                    // Verifico si el usuario ya existe por el email
                     var q = from p in db.Usuarios
                         where p.UsuEmail == email
                         orderby p.UsuEmail
                         select p;
 
-                    res.Contenido = q.FirstOrDefault();
+                    var usuario = q.FirstOrDefault();
 
                     // Si no existe, inserto uno nuevo
-                    if (res.Contenido == null)
-                        res.Contenido = Insertar( new Models.Usuarios {
+                    if (usuario == null)
+                        usuario = Insertar( new Models.Usuarios {
                             UsuNom = name,
                             UsuEmail = email,
                             UsuCel = "",
@@ -240,15 +294,29 @@ namespace Volquex.Services
                             UsuFoto = photo,
                             UsuTipoFoto = "R"
                         } );
-                }
 
-                // Inserto la sesión
-                new Services.Sesiones().Insertar(new Models.Sesiones {
-                    SesionId = token,
-                    SesionExpira = DateTime.Now.AddYears(1000),
-                    UsuarioId = res.Contenido.UsuarioId,
-                    SesionTipo = type
-                });
+                    // Inserto la sesión
+                    new Services.Sesiones(db).Insertar(new Models.Sesiones {
+                        SesionId = token,
+                        SesionExpira = DateTime.Now.AddDays(30),
+                        UsuarioId = usuario.UsuarioId,
+                        SesionTipo = type
+                    });
+
+                    // Inserto el dispositivo
+                    new Services.Usuarios_Disp(db).Insertar(usuario.UsuarioId, tokenDispositivo);
+
+                    // Retorno los estados disponibles
+                    var estados = new Services.Estados(db).Elegibles("VIA");
+
+                    // Establezco los 3 objetos a retornar
+                    res.Contenido = new
+                    {
+                        Usuario = usuario,
+                        Estados = estados,
+                        token = token
+                    };
+                }
             }
 
             client.Dispose();
@@ -258,101 +326,105 @@ namespace Volquex.Services
         public Models.Usuarios MisDatos() 
         {
             // Obtengo el token del header
-            string token = new Services.Sesiones().ObtenerToken();
+            string token = Startup.TokenSesion;
 
-            using (var db = new VolquexDB())
-            {
-                // Leo el usuario de la sesión
-                var usuarioId = new Services.Sesiones().ObtenerUsuario();
+            // Leo el usuario de la sesión
+            var usuarioId = Startup.Usuario.UsuarioId;
 
-                // Obtengo los datos
-                var q = from p in db.Usuarios
-                    where p.UsuarioId == usuarioId
-                    select p;
-                
-                return q.FirstOrDefault();
-            }
+            // Obtengo los datos
+            var q = from p in db.Usuarios
+                where p.UsuarioId == usuarioId
+                select p;
+            
+            return q.FirstOrDefault();
         }
 
         public RespuestaSimple ActualizarDatos(string usuNom, string usuEmail, string usuCel)
         {
             // Obtengo el token del header
-            string token = new Services.Sesiones().ObtenerToken();
+            string token = Startup.TokenSesion;
 
-            using (var db = new VolquexDB())
-            {
-                // Leo el usuario de la sesión
-                var usuarioId = new Services.Sesiones().ObtenerUsuario();
+            // Leo el usuario de la sesión
+            var usuarioId = Startup.Usuario.UsuarioId;
 
-                // Si no encontró, retorno error
-                if (usuarioId == 0)
-                    return new RespuestaSimple(500, "El usuario no existe");
-                    
-                // Verifico que el Email no esté repetido
-                var q02 = from u in db.Usuarios
-                    where u.UsuarioId != usuarioId
-                    where u.UsuEmail == usuEmail
-                    select u;
+            // Si no encontró, retorno error
+            if (usuarioId == 0)
+                return new RespuestaSimple(500, "El usuario no existe");
+                
+            // Verifico que el Email no esté repetido
+            var q02 = from u in db.Usuarios
+                where u.UsuarioId != usuarioId
+                where u.UsuEmail == usuEmail
+                select u;
 
-                // Si retorna algo, mando error
-                if (q02.FirstOrDefault() != null)
-                    return new RespuestaSimple(500, "El Email ya está asignado a otro usuario");
+            // Si retorna algo, mando error
+            if (q02.FirstOrDefault() != null)
+                return new RespuestaSimple(500, "El Email ya está asignado a otro usuario");
 
-                // Si no hubo errores, grabo
-                db.Usuarios
-                    .Where(p => p.UsuarioId == usuarioId)
-                    .Set(p => p.UsuNom, usuNom)
-                    .Set(p => p.UsuEmail, usuEmail)
-                    .Set(p => p.UsuCel, usuCel)
-                    .Update();
+            // Si no hubo errores, grabo
+            db.Usuarios
+                .Where(p => p.UsuarioId == usuarioId)
+                .Set(p => p.UsuNom, usuNom)
+                .Set(p => p.UsuEmail, usuEmail)
+                .Set(p => p.UsuCel, usuCel)
+                .Update();
 
-                return new RespuestaSimple(200, "Se actualizó tu información personal");
-            }
+            return new RespuestaSimple(200, "Se actualizó tu información personal");
 
         }
 
         public void RecalcularCalificacionCliente(decimal? id)
         {
-            using(var db = new VolquexDB())
-            {
-                // Cuenta y suma las calificaciones de este conductor
-                var q = db.Viajes
-                    .OrderBy(p => p.ClienteId)
-                    .Where(p => p.ClienteId == id)
-                    .Where(p => p.ViaEst == "FIN");
-                
-                var count = q.Count();
-                var sum = q.Sum(p => p.ViaCalificacionConductor);
-                var calificacion = sum / count;
+            // Cuenta y suma las calificaciones de este conductor
+            var q = db.Viajes
+                .OrderBy(p => p.ClienteId)
+                .Where(p => p.ClienteId == id)
+                .Where(p => p.ViaCalificacionConductor > 0)
+                .Where(p => p.ViaEst == "FIN");
+            
+            var count = q.Count();
+            var sum = q.Sum(p => p.ViaCalificacionConductor);
+            var calificacion = sum / count;
 
-                // Actualiza la calificación
-                db.Usuarios
-                    .Where(p => p.UsuarioId == id)
-                    .Set(p => p.UsuCalificacion, calificacion)
-                    .Update();
-            }
+            // Actualiza la calificación
+            db.Usuarios
+                .Where(p => p.UsuarioId == id)
+                .Set(p => p.UsuCalificacion, calificacion)
+                .Update();
         }
 
         public void RecalcularCalificacionConductor(decimal? id)
         {
-            using(var db = new VolquexDB())
-            {
-                // Cuenta y suma las calificaciones de este conductor
-                var q = db.Viajes
-                    .OrderBy(p => p.ConductorId)
-                    .Where(p => p.ConductorId == id)
-                    .Where(p => p.ViaEst == "FIN");
-                
-                var count = q.Count();
-                var sum = q.Sum(p => p.ViaCalificacionCliente);
-                var calificacion = sum / count;
+            // Cuenta y suma las calificaciones de este conductor
+            var q = db.Viajes
+                .OrderBy(p => p.ConductorId)
+                .Where(p => p.ConductorId == id)
+                .Where(p => p.ViaCalificacionCliente > 0)
+                .Where(p => p.ViaEst == "FIN");
+            
+            var count = q.Count();
+            var sum = q.Sum(p => p.ViaCalificacionCliente);
+            var calificacion = sum / count;
 
-                // Actualiza la calificación
-                db.Usuarios
-                    .Where(p => p.UsuarioId == id)
-                    .Set(p => p.UsuCalificacion, calificacion)
-                    .Update();
-            }
+            // Actualiza la calificación
+            db.Usuarios
+                .Where(p => p.UsuarioId == id)
+                .Set(p => p.UsuCalificacion, calificacion)
+                .Update();
+        }
+
+        public RespuestaSimple Inicializar(string dispositivoId)
+        {
+            // Obtengo el usuario de la sesión
+            var usuarioId = Startup.Usuario.UsuarioId;
+
+            // Inserto o actualizo el dispositivo asociado
+            new Services.Usuarios_Disp(db).Insertar(usuarioId, dispositivoId);
+
+            // Retorno los estados disponibles
+            var estados = new Services.Estados(db).Elegibles("VIA");
+            
+            return new RespuestaSimple(estados);
         }
 
     }

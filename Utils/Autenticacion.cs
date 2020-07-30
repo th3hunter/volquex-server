@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Net.Http.Headers;
+using Volquex.Models;
 
 namespace Volquex.Utils
 {
@@ -32,18 +33,21 @@ namespace Volquex.Utils
                 return Task.FromResult(AuthenticateResult.Fail("No ha iniciado sesión."));
 
 			string token = authorization.FirstOrDefault();
-            string respuesta = new Services.Sesiones().Autorizar(token);
+            RespuestaSimple respuesta;
+            using (var db = new Volquex.Models.VolquexDB())
+                respuesta = new Services.Sesiones(db).Autorizar(token);
 
             // Verifica que este token esté presente en la tabla SESIONES
-            if (respuesta != "")
-                return Task.FromResult(AuthenticateResult.Fail(respuesta));
+            if (respuesta.Codigo != 200)
+                return Task.FromResult(AuthenticateResult.Fail(respuesta.Texto));
             
-            // Si todo está ok, retorna
+            // Si todo está ok, asigna el usuario y retorna
+            Startup.Usuario = respuesta.Contenido.Usuario;
             var identities = new List<ClaimsIdentity> { new ClaimsIdentity("custom auth type") };
             var ticket = new AuthenticationTicket(new ClaimsPrincipal(identities), Options.Scheme);
 			
 			// Grabo el token globalmente
-			Startup.Token = token;
+			Startup.TokenSesion = token;
 
             return Task.FromResult(AuthenticateResult.Success(ticket));
         }
