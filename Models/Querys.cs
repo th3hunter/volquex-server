@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System;
 using System.Linq;
 
-namespace Volquex.Utils
+namespace Volquex.Models
 {
     public static class Query<T>
     {

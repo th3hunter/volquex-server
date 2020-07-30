@@ -1,8 +1,6 @@
-using System.Net;
 using System;
-using System.Net.Http;
 
-namespace Volquex.Utils
+namespace Volquex.Models
 {
     [Serializable]
     public class RespuestaSimple

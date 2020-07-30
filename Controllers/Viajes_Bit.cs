@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Volquex.Utils;
+using Volquex.Models;
 
 namespace Volquex.Controllers
 {
@@ -7,6 +8,8 @@ namespace Volquex.Controllers
     public class Viajes_Bit : Controller
     {
         public Viajes_Bit() { }
+        
+        private VolquexDB db;
 
         // GET api/Viajes_Bit
         [HttpGet("")]
@@ -16,11 +19,12 @@ namespace Volquex.Controllers
             [FromQuery] int numRegistros
             )
         {
-            return new Services.Viajes_Bit().Listar(
-                viajeId,
-                numPagina,
-                numRegistros
-            );
+            using (db = new VolquexDB())
+                return new Services.Viajes_Bit(db).Listar(
+                    viajeId,
+                    numPagina,
+                    numRegistros
+                );
         }
     }
 }

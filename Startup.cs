@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
@@ -17,9 +18,16 @@ namespace Volquex
     public class Startup
     {
         public static string Key;
-        public static string Token;
+        public static string Version;
+        public static Models.Usuarios Usuario;
+        public static string TokenSesion;
         public static string WebRootPath;
         public static HttpRequest Request;
+        public static class Firebase
+        {
+            public static string CloudMessagingKey;
+            public static string WebAPIKey;
+        }
 
         public IConfiguration Configuration { get; }
 
@@ -31,7 +39,10 @@ namespace Volquex
 
             // Lee la clave del archivo de configuración y lo guarda en la variable estática
             Key = configuration.GetSection("Configuraciones").GetValue<string>("Key");
-
+            Firebase.CloudMessagingKey = configuration.GetSection("Firebase").GetValue<string>("CloudMessagingKey");
+            Firebase.WebAPIKey = configuration.GetSection("Firebase").GetValue<string>("WebAPIKey");
+            Version = configuration.GetSection("Configuraciones").GetValue<string>("Version");
+            
             WebRootPath = env.WebRootPath;
         }
 
@@ -67,6 +78,7 @@ namespace Volquex
             {
                 // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
                 app.UseHsts();
+				app.UseHttpsRedirection();
             }
 
             // global cors policy
@@ -78,8 +90,8 @@ namespace Volquex
             // No habilito la redirección HTTPS cuando es desarrollo
             if (!env.IsDevelopment())
                 app.UseHttpsRedirection();
-            app.UseStaticFiles();
             app.UseDefaultFiles();
+            app.UseStaticFiles();
             app.UseAuthentication();
             app.UseMvc();
         }
@@ -110,12 +122,44 @@ namespace Volquex
         {
             get
             {
+                string connectionString = "", envVariable = "";
+
+                // Primero la obtiene del appsettings
+                connectionString = configuration.GetConnectionString("Default");
+
+                // HEROKU: Detecta si hay la variable de entorno
+                envVariable = Environment.GetEnvironmentVariable("DATABASE_URL");
+
+                // Si hubo
+                if (envVariable != "" && envVariable != null)
+                {
+                    // Arma la connection string a partir de la variable de entorno
+                    // Ejemplo
+                    // postgres://ojunflcdtkendq:be88fc41989efe90fda30380a6dae8ec9259cc19f237f11135b68a52371a6ce5@ec2-54-235-146-51.compute-1.amazonaws.com:5432/d8lhbkcpmedcej"
+
+                    // Elimina el caracter //
+                    envVariable = envVariable.Replace("//", "");
+
+                    // Separa las partes de la conexión en un arreglo
+                    char[] delimiterChars = { '/', ':', '@', '?' };
+                    string[] strConn = envVariable.Split(delimiterChars);
+                    strConn = strConn.Where(x => !string.IsNullOrEmpty(x)).ToArray();
+
+                    // Arma la connection string
+                    connectionString = String.Format("User ID={0};Password={1};Host={2};Port={3};Database={4};ApplicationName=Volquex;Pooling=true;",
+                        strConn[1],
+                        strConn[2],
+                        strConn[3],
+                        strConn[4],
+                        strConn[5]);
+                }
+
                 yield return
                     new ConnectionStringSettings
                     {
                         Name = "Default",
                         ProviderName = "PostgreSQL",
-                        ConnectionString = configuration.GetConnectionString("Default")
+                        ConnectionString = connectionString
                     };
             }
         }
